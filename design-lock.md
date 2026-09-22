@@ -25,3 +25,8 @@ não adicionar gradientes, cores chamativas, sombras fortes, glassmorphism, card
 preservar o visual pixelualmente sempre que possível. quando uma correção funcional ou de responsividade exigir mudança visível, limitar a alteração ao menor trecho necessário e manter a linguagem atual. comparar antes/depois em desktop e mobile. não usar uma correção localizada como autorização para reformular outras áreas.
 
 ideias de produto devem ir para `future-ideas.md`, sem implementação automática. nenhuma mudança visual foi feita ao registrar este documento.
+
+
+## exceção localizada autorizada em 22/09/2026
+
+o proprietário solicitou corrigir o contraste de “chamar no whatsapp”: texto e ícone usam o off-white existente, mantendo o fundo verde e todas as dimensões. o foco utiliza o verde escuro existente. esta autorização vale somente para legibilidade deste componente e de casos comprovadamente ilegíveis; não permite redesign.
