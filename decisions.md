@@ -35,3 +35,11 @@ referências oficiais consultadas: https://nextjs.org/docs/app/getting-started/p
 - não configurar senha, usuários autenticados, redirects ou smtp diretamente em tabelas internas de auth; usar configuração oficial do serviço.
 - instrução da habilidade control-browser exige permissão antes de trocar para os painéis no navegador quando o plugin de um serviço falha. pedir uma única autorização para esse caminho, sem pedir senhas ou tokens no chat.
 - referência do aviso: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+
+
+## 2026-09-22 — correções pontuais autorizadas
+
+- auth: o proxy valida a identidade com `getClaims()` e redireciona usuários autenticados de `/entrar` e `/criar-conta` para `/app`. visitantes continuam vendo os formulários. a proteção de dados no servidor continua usando `getUser()`.
+- cookies: cookies renovados são copiados para respostas de redirecionamento. todos os headers fornecidos por `setAll` são preservados; respostas dos caminhos de autenticação recebem cache privado e no-store. testes cobrem sessão válida, expirada, visitante e renovação.
+- contraste: a regra específica do link primário no painel de ação usa o off-white existente para texto/ícone, mantendo o fundo verde, dimensões, tipografia e layout. foco recebe o verde escuro existente. esta exceção foi explicitamente solicitada; não autoriza redesign.
+- validação: isolamento automatizado cobre leitura, alteração e exclusão nas duas direções. esses testes usam identidades simuladas em postgres embutido e não substituem duas contas reais na aplicação publicada. resultados atuais ficam em `qa-status.md`.
