@@ -183,6 +183,44 @@ test('uncontacted schedule follows edited sent date', async () => {
     [1, 3, 7],
   );
 });
+test('tenant a cannot read or mutate tenant b data, while b keeps access', async () => {
+  await user(b);
+  const companyB = await scalar('select my_company_id()');
+  const quoteB = await scalar(
+    "select save_quote('cliente isolado beta','5561999999999','higienização',45000,current_date-1,'')",
+  );
+  const followupB = await scalar('select id from followups where quote_id=$1 and step=1', [quoteB]);
+  await user(a);
+  for (const [sql, id] of [
+    ['select count(*)::int from profiles where id=$1', b],
+    ['select count(*)::int from company_members where user_id=$1', b],
+    ['select count(*)::int from companies where id=$1', companyB],
+    ['select count(*)::int from quotes where id=$1', quoteB],
+    ['select count(*)::int from followups where id=$1', followupB],
+  ] as const)
+    assert.equal(await scalar(sql, [id]), 0);
+  await assert.rejects(
+    db.query("select save_quote('alterado','5561999999999','ppf',1,current_date,'',$1)", [quoteB]),
+    /not found/,
+  );
+  await assert.rejects(
+    db.query("select complete_followup($1,'alterado')", [followupB]),
+    /not found/,
+  );
+  await assert.rejects(db.query("select resolve_quote($1,'won')", [quoteB]), /not found/);
+  await assert.rejects(db.query("select resolve_quote($1,'lost','preço')", [quoteB]), /not found/);
+  await assert.rejects(
+    db.query("update companies set name='alterada' where id=$1", [companyB]),
+    /permission denied/,
+  );
+  await user(b);
+  assert.equal(await scalar('select amount_cents from quotes where id=$1', [quoteB]), 45000);
+  await db.query("select complete_followup($1,'contato autorizado')", [followupB]);
+  assert.equal(
+    await scalar('select message from followups where id=$1', [followupB]),
+    'contato autorizado',
+  );
+});
 test('server rejects invalid phone, nonpositive amount and future date', async () => {
   await user(a);
   await assert.rejects(
