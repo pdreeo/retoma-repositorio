@@ -89,6 +89,32 @@ test('direct writes, forged membership and reassignment are blocked', async () =
   );
   await assert.rejects(db.query("update profiles set name='hacked'"), /permission denied/);
 });
+test('both tenants are denied direct deletion of another company data', async () => {
+  for (const [actor, target] of [
+    [a, b],
+    [b, a],
+  ]) {
+    await user(target);
+    const targetCompany = await scalar('select my_company_id()');
+    await user(actor);
+    for (const sql of [
+      'delete from quotes where company_id=$1',
+      'delete from followups where company_id=$1',
+      'delete from company_members where company_id=$1',
+      'delete from companies where id=$1',
+    ])
+      await assert.rejects(db.query(sql, [targetCompany]), /permission denied/);
+    await assert.rejects(
+      db.query('delete from profiles where id=$1', [target]),
+      /permission denied/,
+    );
+    await user(target);
+    assert.equal(
+      await scalar('select count(*)::int from companies where id=$1', [targetCompany]),
+      1,
+    );
+  }
+});
 test('anonymous has no data or mutation access', async () => {
   await db.exec("reset role;set role anon;select set_config('request.jwt.claim.sub','',false)");
   await assert.rejects(db.query('select * from quotes'), /permission denied/);
