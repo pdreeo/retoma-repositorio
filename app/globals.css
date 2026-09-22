@@ -898,6 +898,12 @@ dd {
   font-size: 14px;
   margin-top: 25px;
 }
+.action-panel > a.button-primary {
+  color: var(--background);
+}
+.action-panel > a.button-primary:focus-visible {
+  outline-color: var(--primary-dark);
+}
 .action-icon {
   display: grid;
   place-items: center;
