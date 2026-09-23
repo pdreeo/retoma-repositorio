@@ -1168,7 +1168,7 @@ function Onboarding({ busy, onSave }: { busy: boolean; onSave: (name: string) =>
             minLength={2}
             maxLength={100}
             required
-            placeholder="ex.: vértice estética automotiva"
+            placeholder="ex.: meu negócio"
           />
         </label>
         <Button type="submit" disabled={busy}>
