@@ -33,3 +33,14 @@ ambiente: produção em https://retoma-five.vercel.app, projeto supabase `retoma
 - vercel retorna 403 na leitura administrativa do projeto, variáveis e logs; o status do commit no github confirma deployment de sucesso e o site está acessível. nenhum valor de env remoto foi afirmado por inferência.
 
 o beta público está acessível; estas pendências impedem declarar concluída a validação integral de segurança e recuperação pedida para liberação a clientes.
+
+## 23/09/2026 — mensagens e clareza do fluxo
+
+ambiente: `https://retoma-five.vercel.app` após o commit `faa126e7`; no navegador a data brasileira era 22/09. supabase existente saudável, migration original `20260922085348` preservada e nova `20260923010036_reschedule_followup` aplicada uma vez.
+
+- demonstração pública: orçamento fictício “anna silva”, serviço com maiúsculas `Landing Page + PPF`, telefone fictício e r$ 1.250,99 criado. o formulário abriu o detalhe automaticamente. conferidos status, vencimento, mensagem `Oi, Anna! Conseguiu... Se...`, telefone e mensagem codificados no `wa.me`. o clique abriu o destino `whatsapp://send` com os mesmos dados; nenhuma mensagem foi enviada a um número real.
+- após voltar: contato confirmado no diálogo, primeira etapa registrada com a mensagem correta e etapa seguinte exibida. a mensagem da segunda etapa aparece como `Oi, Anna! Passando... Posso...`. reagendamento para 26/09 atualizou a etapa seguinte para 30/09; a visão geral separou pendências de hoje e contatos futuros. ganho acrescentou r$ 1.250,99 ao indicador do mês e encerrou o orçamento.
+- outro orçamento fictício marcado perdido com motivo “outro”; detalhes vazios impedidos pelo formulário, motivo e texto salvos. o total aberto e a lista de hoje caíram depois do encerramento.
+- screenshot desktop da visão geral confirmou sidebar, tipografia, cores e disposição aprovadas. console sem erro da aplicação durante o fluxo; os erros vistos têm origem na extensão do navegador de teste. inspeção do navegador em viewport mobile não disponível; regras responsivas permanecem no código, sem confirmação visual em aparelho ou emulação mobile.
+- `npm run lint`, `npm run typecheck`, `npm test` (25/25) e `npm run build` passaram depois das correções finais. teste de banco embutido cobriu reagendamento e bloqueio de tenant distinto. na instância hospedada, privilégios da nova função: `anon` sem execute, `authenticated` com execute; os testes com duas contas reais hospedadas e recuperação de senha seguem pendentes conforme acima.
+- security advisor após nova migration: nenhum finding crítico, 7 avisos da mesma classe de rpcs `security definer` autenticadas e aviso de leaked password protection desativada. a nova rpc exige `auth.uid()`, isola por `my_company_id()` e valida data/estado; o aviso é intencional. inspeção administrativa da vercel pela integração ainda retorna 403, mas o status do commit no github confirmou deployment bem-sucedido e a URL publicou a correção.
