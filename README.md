@@ -1,6 +1,6 @@
 # retoma
 
-follow-up simples para estéticas automotivas. next.js + supabase, preparado para vercel.
+follow-up simples para negócios que vendem serviços. next.js + supabase, preparado para vercel.
 
 **estado atual:** landing e demonstração publicadas em https://retoma-five.vercel.app. banco real ativo, migration aplicada e rls nas cinco tabelas. autenticação completa e isolamento com duas contas reais ainda não foram validados. o beta ainda não está liberado para clientes. identidade visual congelada em `design-lock.md`.
 
