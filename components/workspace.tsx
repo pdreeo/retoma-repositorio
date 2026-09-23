@@ -407,6 +407,7 @@ export function WorkspaceApp({ demo = false }: { demo?: boolean }) {
                 f.skipped_at = now;
             });
             q.status = 'awaiting';
+            q.updated_at = now;
           }
         }
         if (endpoint === 'reschedule') {
@@ -926,7 +927,6 @@ function QuoteDetail({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [wonOpen, setWonOpen] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [rescheduleDate, setRescheduleDate] = useState(addDays(todayBR(), 1));
   const [reason, setReason] = useState<string>(LOSS_REASONS[0]);
   const [lossNote, setLossNote] = useState('');
   const [error, setError] = useState('');
@@ -1055,7 +1055,7 @@ function QuoteDetail({
                 {due
                   ? 'chame este cliente hoje.'
                   : next
-                    ? `próximo contato: ${dateLabel(next.due_on)}.`
+                    ? `próximo contato: ${dateLabel(next.due_on)}`
                     : 'aguarde uma resposta ou registre o resultado.'}
               </h2>
               <p className="muted">
@@ -1118,10 +1118,7 @@ function QuoteDetail({
                   <button
                     className="text-link"
                     disabled={busy}
-                    onClick={() => {
-                      setRescheduleDate(addDays(todayBR(), 1));
-                      setRescheduleOpen(true);
-                    }}
+                    onClick={() => setRescheduleOpen(true)}
                   >
                     <Clock3 size={16} />
                     reagendar próximo contato
@@ -1170,7 +1167,7 @@ function QuoteDetail({
             e.preventDefault();
             const ok = await onMutate({
               endpoint: 'reschedule',
-              body: { id: q.id, due_on: rescheduleDate },
+              body: { id: q.id, due_on: String(new FormData(e.currentTarget).get('due_on')) },
             });
             if (ok) setRescheduleOpen(false);
           }}
@@ -1178,12 +1175,12 @@ function QuoteDetail({
           <label>
             próxima data
             <input
+              name="due_on"
               type="date"
               required
               min={addDays(todayBR(), 1)}
               max={addDays(todayBR(), 365)}
-              value={rescheduleDate}
-              onChange={(e) => setRescheduleDate(e.target.value)}
+              defaultValue={addDays(todayBR(), 1)}
             />
           </label>
           <Button type="submit" disabled={busy}>
