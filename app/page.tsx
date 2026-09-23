@@ -33,9 +33,6 @@ export default function Landing() {
       </header>
       <main>
         <section className="hero">
-          <div className="hero-kicker">
-            <span className="tiny-dot" /> feito para estéticas automotivas
-          </div>
           <h1>
             pare de esquecer
             <br />
@@ -93,7 +90,7 @@ export default function Landing() {
               <span>só parou de responder.</span>
             </h2>
             <p>
-              entre um carro e outro, as conversas descem na lista. aquele orçamento de vitrificação
+              entre um atendimento e outro, as conversas descem na lista. aquele orçamento enviado
               fica para depois. e o depois vira nunca.
               <br />
               <br />o retoma coloca essas oportunidades de volta na sua frente.
