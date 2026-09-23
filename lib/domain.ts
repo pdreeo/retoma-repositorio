@@ -128,13 +128,18 @@ export function metrics(quotes: Quote[], today = todayBR()) {
   };
 }
 export function suggestion(q: Quote) {
-  const first = q.customer_name.trim().split(' ')[0];
+  const name = q.customer_name.trim().split(/\s+/)[0];
+  const normalized =
+    name === name.toLocaleUpperCase('pt-BR') ? name.toLocaleLowerCase('pt-BR') : name;
+  const first = normalized.replace(/(^|[-'’])(\p{L})/gu, (_, prefix: string, letter: string) =>
+    prefix + letter.toLocaleUpperCase('pt-BR'),
+  );
   const step = nextFollowup(q)?.step ?? 3;
   return step === 1
-    ? `oi, ${first}! conseguiu dar uma olhada no orçamento de ${q.service.toLowerCase()}? se tiver alguma dúvida, me chama aqui.`
+    ? `Oi, ${first}! Conseguiu dar uma olhada no orçamento de ${q.service}? Se tiver alguma dúvida, me chama aqui.`
     : step === 2
-      ? `oi, ${first}! passando pra saber se você ainda tem interesse em ${q.service.toLowerCase()}. posso te ajudar com alguma dúvida?`
-      : `oi, ${first}! ainda faz sentido pra você seguir com ${q.service.toLowerCase()}? se preferir deixar pra depois, tudo bem. me avisa por aqui.`;
+      ? `Oi, ${first}! Passando pra saber se você ainda tem interesse em ${q.service}. Posso te ajudar com alguma dúvida?`
+      : `Oi, ${first}! Ainda faz sentido pra você seguir com ${q.service}? Se preferir deixar pra depois, tudo bem. Me avisa por aqui.`;
 }
 export function whatsappUrl(phone: string, message: string) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;

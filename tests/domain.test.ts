@@ -8,6 +8,7 @@ import {
   metrics,
   nextFollowup,
   prioritized,
+  suggestion,
   whatsappUrl,
   type Quote,
 } from '../lib/domain';
@@ -36,6 +37,37 @@ test('phone normalization and whatsapp message encoding', () => {
     new URL(whatsappUrl('5561999999999', 'oi, joão! & você?')).searchParams.get('text'),
     'oi, joão! & você?',
   );
+});
+test('client messages use natural capitalization and preserve names and service spelling', () => {
+  const quote = {
+    ...demoWorkspace().quotes[1],
+    customer_name: 'anna maria',
+    service: 'Landing Page + PPF',
+  };
+  assert.equal(
+    suggestion(quote),
+    'Oi, Anna! Conseguiu dar uma olhada no orçamento de Landing Page + PPF? Se tiver alguma dúvida, me chama aqui.',
+  );
+  quote.followups = quote.followups.map((f) =>
+    f.step === 1 ? { ...f, completed_at: '2026-09-21T12:00:00Z' } : f,
+  );
+  assert.equal(
+    suggestion(quote),
+    'Oi, Anna! Passando pra saber se você ainda tem interesse em Landing Page + PPF. Posso te ajudar com alguma dúvida?',
+  );
+  quote.followups = quote.followups.map((f) =>
+    f.step === 2 ? { ...f, completed_at: '2026-09-22T12:00:00Z' } : f,
+  );
+  quote.customer_name = 'éverton';
+  assert.equal(
+    suggestion(quote),
+    'Oi, Éverton! Ainda faz sentido pra você seguir com Landing Page + PPF? Se preferir deixar pra depois, tudo bem. Me avisa por aqui.',
+  );
+  assert.equal(new URL(whatsappUrl(quote.phone, suggestion(quote))).searchParams.get('text'), suggestion(quote));
+  quote.customer_name = "D'ÁVILA";
+  assert.match(suggestion(quote), /^Oi, D'Ávila!/);
+  quote.customer_name = 'McDonald';
+  assert.match(suggestion(quote), /^Oi, McDonald!/);
 });
 test('validation rejects malformed dates, future quotes, missing names and invalid phone', () => {
   const valid = {

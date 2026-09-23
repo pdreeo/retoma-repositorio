@@ -28,7 +28,7 @@ não coloque `service_role`, senha do banco ou token pessoal em variáveis `NEXT
 
 ## supabase
 
-1. no retoma existente, preserve o projeto e a migration `20260922085348` já aplicada. somente para uma instalação independente e vazia, aplique `supabase/migrations/20260922085348_retoma.sql`. não reaplique migrations já presentes.
+1. no retoma existente, preserve o projeto e as migrations `20260922085348` e `20260923010036` já aplicadas. somente para uma instalação independente e vazia, aplique os arquivos em `supabase/migrations/` na ordem dos nomes. não reaplique migrations já presentes.
 2. habilite login por e-mail/senha. mantenha confirmação de e-mail e configure o site url e os redirect urls: `<origem>/auth/callback` e `<origem>/auth/callback?next=/nova-senha`.
 3. para links que funcionam também em outro dispositivo, use nos templates:
    - confirmação: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup`
@@ -66,9 +66,11 @@ antes de entregar a url: testar cadastro, confirmação de e-mail, empresa, novo
 | `companies`       | empresa, timezone e intervalos                          |
 | `company_members` | vínculo único usuário → empresa na v1                   |
 | `quotes`          | orçamento, centavos, status e fotografia do valor ganho |
-| `followups`       | três etapas com data, mensagem e conclusão/agrupamento  |
+| `followups`       | três etapas com data, reagendamento, mensagem e conclusão/agrupamento |
 
 escritas passam por funções específicas que verificam o vínculo e bloqueiam concorrência por orçamento. rls isola leituras. browser e servidor usam a chave publicável; sem bypass de segurança.
+
+as mensagens sugeridas usam capitalização brasileira normal. na visão geral, contatos para hoje e futuros são separados; no orçamento, o usuário abre o whatsapp e então registra o contato, ganho, perda ou uma nova data. o reagendamento é validado no servidor e no banco, preservando a ordem das etapas futuras.
 
 ## verificação
 

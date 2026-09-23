@@ -97,6 +97,9 @@ export function Dashboard({
   const m = metrics(workspace.quotes);
   const due = prioritized(workspace.quotes);
   const today = todayBR();
+  const upcoming = workspace.quotes
+    .filter((q) => nextFollowup(q) && !isDue(q, today))
+    .sort((a, b) => nextFollowup(a)!.due_on.localeCompare(nextFollowup(b)!.due_on));
   return (
     <>
       <div className="page-heading">
@@ -106,7 +109,7 @@ export function Dashboard({
             bom dia, {workspace.profile.name.split(' ')[0]}
             <span className="green">.</span>
           </h1>
-          <p className="muted">um pequeno contato pode trazer um cliente de volta.</p>
+          <p className="muted">comece pelos clientes que precisam de você hoje.</p>
         </div>
         {!preview && (
           <Button onClick={onNew}>
@@ -121,7 +124,7 @@ export function Dashboard({
           {money(m.open)}
           <span> em propostas abertas</span>
         </div>
-        <p>conversas que ainda podem virar negócio.</p>
+        <p>orçamentos que ainda aguardam uma resposta.</p>
       </section>
       <div className="metrics">
         <div className="metric active">
@@ -155,7 +158,7 @@ export function Dashboard({
             <h2>
               follow-ups de hoje <span className="count">{due.length}</span>
             </h2>
-            <p className="muted">os mais atrasados aparecem primeiro.</p>
+            <p className="muted">abra um orçamento para chamar no whatsapp.</p>
           </div>
           {!preview && (
             <Link className="text-link" href={base + '/orcamentos'}>
@@ -209,7 +212,9 @@ export function Dashboard({
             </h3>
             <p>
               {workspace.quotes.length
-                ? 'os próximos contatos vão aparecer aqui na data certa.'
+                ? upcoming.length
+                  ? 'sem contato pendente hoje. os próximos estão logo abaixo.'
+                  : 'cadastre um novo orçamento para receber os próximos lembretes.'
                 : 'cadastre um orçamento. amanhã, o retoma lembra você de voltar à conversa.'}
             </p>
             {!workspace.quotes.length && (
@@ -225,6 +230,41 @@ export function Dashboard({
           você cuida do serviço. o retoma cuida de lembrar.
         </div>
       </section>
+      {!preview && upcoming.length > 0 && (
+        <section className="upcoming-section">
+          <div className="section-heading">
+            <div>
+              <h2>próximos contatos</h2>
+              <p className="muted">agendados para depois de hoje.</p>
+            </div>
+          </div>
+          <div className="followup-list">
+            {upcoming.slice(0, 3).map((q) => (
+              <div className="followup-row" key={q.id}>
+                <div className="avatar">{q.customer_name.slice(0, 2)}</div>
+                <div className="customer">
+                  <strong>{q.customer_name}</strong>
+                  <span>{q.service}</span>
+                </div>
+                <div className="followup-value">
+                  <strong>{dateLabel(nextFollowup(q)!.due_on)}</strong>
+                  <span>{money(q.amount_cents)}</span>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={base + '/orcamentos/' + q.id}>
+                    ver orçamento <ArrowUpRight size={15} />
+                  </Link>
+                </Button>
+              </div>
+            ))}
+          </div>
+          {upcoming.length > 3 && (
+            <Link className="text-link upcoming-more" href={base + '/orcamentos'}>
+              ver todos os orçamentos <ArrowRight size={15} />
+            </Link>
+          )}
+        </section>
+      )}
     </>
   );
 }
@@ -300,6 +340,7 @@ export function WorkspaceApp({ demo = false }: { demo?: boolean }) {
     if (!workspace) return;
     setBusy(true);
     setError('');
+    let savedQuoteId: string | undefined;
     try {
       if (demo) {
         const data = structuredClone(workspace);
@@ -308,6 +349,7 @@ export function WorkspaceApp({ demo = false }: { demo?: boolean }) {
           const p = quoteSchema.parse(body);
           const old = data.quotes.find((q) => q.id === p.id);
           const id = p.id || crypto.randomUUID();
+          savedQuoteId = id;
           const company_id = data.company!.id;
           const followups = old
             ? old.followups.map((f) => ({
@@ -367,20 +409,40 @@ export function WorkspaceApp({ demo = false }: { demo?: boolean }) {
             q.status = 'awaiting';
           }
         }
+        if (endpoint === 'reschedule') {
+          const q = data.quotes.find((q) => q.id === body.id)!;
+          const next = nextFollowup(q);
+          if (!next || q.status === 'won' || q.status === 'lost')
+            throw new Error('não há contato pendente para reagendar.');
+          const newDate = String(body.due_on);
+          if (newDate < addDays(clock, 1) || newDate > addDays(clock, 365))
+            throw new Error('escolha uma data entre amanhã e o próximo ano.');
+          const offsets = [1, 3, 7];
+          q.followups.forEach((f) => {
+            if (f.completed_at || f.skipped_at || f.step < next.step) return;
+            const date = addDays(newDate, offsets[f.step - 1] - offsets[next.step - 1]);
+            f.due_on = f.step === next.step || f.due_on < date ? date : f.due_on;
+          });
+          q.status = 'awaiting';
+          q.updated_at = now;
+        }
         if (endpoint === 'company' && data.company) data.company.name = String(body.name);
         saveDemo(data);
       } else {
-        await api(endpoint, body, method);
+        const result = await api(endpoint, body, method);
+        if (endpoint === 'quotes') savedQuoteId = result.id;
         await load();
       }
       setNotice(
-        endpoint === 'followups'
+        endpoint === 'reschedule'
+          ? 'contato reagendado. ele volta na data escolhida.'
+          : endpoint === 'followups'
           ? 'follow-up registrado. próxima ação atualizada.'
           : endpoint === 'resolve' && body.status === 'won'
             ? 'cliente recuperado. valor registrado no mês.'
             : 'salvo com sucesso.',
       );
-      return true;
+      return savedQuoteId || true;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'não foi possível salvar.');
       return false;
@@ -641,7 +703,11 @@ export function WorkspaceApp({ demo = false }: { demo?: boolean }) {
             busy={busy}
             onSave={async (body) => {
               const ok = await mutate({ endpoint: 'quotes', body });
-              if (ok) setEditing(null);
+              if (ok) {
+                setEditing(null);
+                if (editing === 'new' && typeof ok === 'string')
+                  router.push(base + '/orcamentos/' + ok);
+              }
               return ok;
             }}
           />
@@ -714,7 +780,7 @@ function QuoteForm({
 }: {
   quote?: Quote;
   busy: boolean;
-  onSave: (body: QuoteInput) => Promise<boolean | undefined>;
+  onSave: (body: QuoteInput) => Promise<boolean | string | undefined>;
 }) {
   const [error, setError] = useState('');
   const contacted = quote?.followups.some((f) => f.completed_at || f.skipped_at);
@@ -853,12 +919,14 @@ function QuoteDetail({
   demo: boolean;
   busy: boolean;
   onEdit: () => void;
-  onMutate: (v: Mutation) => Promise<boolean | undefined>;
+  onMutate: (v: Mutation) => Promise<boolean | string | undefined>;
 }) {
   const [message, setMessage] = useState(suggestion(q));
   const [lossOpen, setLossOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [wonOpen, setWonOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(addDays(todayBR(), 1));
   const [reason, setReason] = useState<string>(LOSS_REASONS[0]);
   const [lossNote, setLossNote] = useState('');
   const [error, setError] = useState('');
@@ -891,7 +959,7 @@ function QuoteDetail({
       </Link>
       <div className="page-heading detail-heading">
         <div>
-          <div className="eyebrow">uma conversa, uma oportunidade</div>
+          <div className="eyebrow">seu orçamento</div>
           <h1>
             {q.customer_name}
             <span className="green">.</span>
@@ -918,7 +986,13 @@ function QuoteDetail({
               </div>
               <div>
                 <dt>próximo follow-up</dt>
-                <dd>{next ? dateLabel(next.due_on) : closed ? 'encerrado' : 'régua concluída'}</dd>
+                <dd>
+                  {next
+                    ? `${due ? 'hoje ou em atraso · ' : 'agendado · '}${dateLabel(next.due_on)}`
+                    : closed
+                      ? 'encerrado'
+                      : 'régua concluída'}
+                </dd>
               </div>
             </dl>
             {!closed && (
@@ -976,23 +1050,23 @@ function QuoteDetail({
             </>
           ) : (
             <>
-              <div className="eyebrow">próxima ação recomendada</div>
+              <div className="eyebrow">próxima ação</div>
               <h2>
                 {due
-                  ? 'hora de retomar essa conversa.'
+                  ? 'chame este cliente hoje.'
                   : next
-                    ? 'o próximo contato já está planejado.'
-                    : 'três contatos. e agora?'}
+                    ? `próximo contato: ${dateLabel(next.due_on)}.`
+                    : 'aguarde uma resposta ou registre o resultado.'}
               </h2>
               <p className="muted">
                 {due
-                  ? 'edite a mensagem se quiser e abra a conversa no whatsapp.'
+                  ? 'confira a mensagem, abra o whatsapp e registre o resultado depois.'
                   : next
-                    ? `seu lembrete aparece em ${dateLabel(next.due_on)}. você também pode abrir a conversa agora.`
-                    : 'a régua terminou. aguarde uma resposta ou registre o resultado do orçamento.'}
+                    ? 'o retoma vai mostrar este cliente na lista do dia. você pode chamá-lo antes.'
+                    : 'se o cliente respondeu, marque o orçamento como ganho ou perdido.'}
               </p>
               <label className="message-label" htmlFor="followup-message">
-                sua mensagem
+                mensagem para o cliente · pode editar
               </label>
               <textarea
                 id="followup-message"
@@ -1018,19 +1092,19 @@ function QuoteDetail({
                 )}
               </Button>
               <small className="muted">o retoma não envia mensagens automaticamente.</small>
-              {due && next && (
-                <Button
-                  variant="outline"
-                  className="full"
-                  disabled={busy || !message.trim()}
-                  onClick={() => setConfirmOpen(true)}
-                >
-                  <Check size={17} />
-                  marcar follow-up realizado
-                </Button>
-              )}
               <div className="result-actions">
-                <span>já tem uma resposta?</span>
+                <span>depois da conversa, o que aconteceu?</span>
+                {due && next && (
+                  <Button
+                    variant="outline"
+                    className="full"
+                    disabled={busy || !message.trim()}
+                    onClick={() => setConfirmOpen(true)}
+                  >
+                    <Check size={17} />
+                    registrar contato · aguardando resposta
+                  </Button>
+                )}
                 <div>
                   <Button variant="outline" disabled={busy} onClick={() => setWonOpen(true)}>
                     <Check size={16} />
@@ -1040,9 +1114,17 @@ function QuoteDetail({
                     perdido
                   </Button>
                 </div>
-                {q.status === 'new' && (
-                  <button className="text-link" disabled={busy} onClick={() => resolve('awaiting')}>
-                    marcar como aguardando
+                {next && (
+                  <button
+                    className="text-link"
+                    disabled={busy}
+                    onClick={() => {
+                      setRescheduleDate(addDays(todayBR(), 1));
+                      setRescheduleOpen(true);
+                    }}
+                  >
+                    <Clock3 size={16} />
+                    reagendar próximo contato
                   </button>
                 )}
               </div>
@@ -1075,6 +1157,39 @@ function QuoteDetail({
             {busy ? 'salvando...' : 'sim, registrar contato'}
           </Button>
         </div>
+      </Dialog>
+      <Dialog
+        open={rescheduleOpen}
+        onOpenChange={setRescheduleOpen}
+        title="quando falar de novo?"
+        description="o cliente volta para a lista no dia escolhido. reagendar não registra um contato."
+      >
+        <form
+          className="form-stack"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const ok = await onMutate({
+              endpoint: 'reschedule',
+              body: { id: q.id, due_on: rescheduleDate },
+            });
+            if (ok) setRescheduleOpen(false);
+          }}
+        >
+          <label>
+            próxima data
+            <input
+              type="date"
+              required
+              min={addDays(todayBR(), 1)}
+              max={addDays(todayBR(), 365)}
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+            />
+          </label>
+          <Button type="submit" disabled={busy}>
+            {busy ? 'salvando...' : 'agendar próximo contato'}
+          </Button>
+        </form>
       </Dialog>
       <Dialog
         open={wonOpen}

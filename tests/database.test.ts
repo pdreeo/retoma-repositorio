@@ -24,6 +24,7 @@ before(async () => {
     '',
   );
   await db.exec(sql);
+  await db.exec(readFileSync('supabase/migrations/20260923010036_reschedule_followup.sql', 'utf8'));
   await db.query('insert into auth.users values ($1,$3),($2,$3)', [
     a,
     b,
@@ -119,6 +120,37 @@ test('anonymous has no data or mutation access', async () => {
   await db.exec("reset role;set role anon;select set_config('request.jwt.claim.sub','',false)");
   await assert.rejects(db.query('select * from quotes'), /permission denied/);
   await assert.rejects(db.query("select create_company('anonymous')"), /permission denied/);
+});
+test('rescheduling moves the next contact, keeps later steps ordered and checks tenant access', async () => {
+  await user(a);
+  const id = await scalar(
+    "select save_quote('contato reagendado','5561999999999','PPF',75000,(now() at time zone 'America/Sao_Paulo')::date-10,'')",
+  );
+  await assert.rejects(
+    db.query("select reschedule_followup($1,(now() at time zone 'America/Sao_Paulo')::date)", [id]),
+    /invalid followup date/,
+  );
+  await db.query(
+    "select reschedule_followup($1,(now() at time zone 'America/Sao_Paulo')::date+4)",
+    [id],
+  );
+  const rows = await db.query<{ days: number }>(
+    "select due_on - (now() at time zone 'America/Sao_Paulo')::date as days from followups where quote_id=$1 order by step",
+    [id],
+  );
+  assert.deepEqual(rows.rows.map((r) => r.days), [4, 6, 10]);
+  assert.equal(await scalar('select status from quotes where id=$1', [id]), 'awaiting');
+  await user(b);
+  await assert.rejects(
+    db.query("select reschedule_followup($1,(now() at time zone 'America/Sao_Paulo')::date+7)", [id]),
+    /not found/,
+  );
+  await user(a);
+  await db.query("select resolve_quote($1,'won')", [id]);
+  await assert.rejects(
+    db.query("select reschedule_followup($1,(now() at time zone 'America/Sao_Paulo')::date+7)", [id]),
+    /closed quote/,
+  );
 });
 test('completion is idempotent, groups overdue steps and preserves future schedule', async () => {
   await user(a);

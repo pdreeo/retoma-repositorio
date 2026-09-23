@@ -585,6 +585,12 @@ label {
   font-size: 12px;
   margin-top: 26px;
 }
+.upcoming-section {
+  margin-top: 44px;
+}
+.upcoming-more {
+  margin-top: 16px;
+}
 .demo-banner {
   padding: 9px 30px;
   background: #eef3e9;
@@ -881,6 +887,9 @@ dd {
 .result-actions > span {
   font-size: 12px;
   color: #89947c;
+}
+.result-actions > .button {
+  margin-top: 10px;
 }
 .result-actions > div {
   display: flex;

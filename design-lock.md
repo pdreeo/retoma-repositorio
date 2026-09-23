@@ -30,3 +30,7 @@ ideias de produto devem ir para `future-ideas.md`, sem implementação automáti
 ## exceção localizada autorizada em 22/09/2026
 
 o proprietário solicitou corrigir o contraste de “chamar no whatsapp”: texto e ícone usam o off-white existente, mantendo o fundo verde e todas as dimensões. o foco utiliza o verde escuro existente. esta autorização vale somente para legibilidade deste componente e de casos comprovadamente ilegíveis; não permite redesign.
+
+## ajustes de fluxo autorizados em 23/09/2026
+
+o proprietário autorizou pequenos ajustes de hierarquia, copy, posicionamento, agrupamento e fluxo para esclarecer a próxima ação. contatos futuros aparecem abaixo dos pendentes de hoje; a página do orçamento agrupa o registro após a conversa. a tipografia, paleta, sidebar, estrutura e componentes visuais originais permanecem. esta autorização não libera redesign. textos da interface preservam o estilo em minúsculas; mensagens destinadas a clientes usam português brasileiro com capitalização normal.

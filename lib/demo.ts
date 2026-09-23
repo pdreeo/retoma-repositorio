@@ -42,7 +42,7 @@ export function demoWorkspace(): Workspace {
         due_on: addDays(sent_on, d),
         completed_at: i === 0 && j === 0 ? addDays(sent_on, 1) + 'T15:00:00Z' : null,
         skipped_at: null,
-        message: i === 0 && j === 0 ? 'oi, rafael! conseguiu dar uma olhada no orçamento?' : null,
+        message: i === 0 && j === 0 ? 'Oi, Rafael! Conseguiu dar uma olhada no orçamento?' : null,
       })),
     };
   });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LOSS_REASONS, normalizePhone, parseMoney, todayBR } from './domain';
+import { addDays, LOSS_REASONS, normalizePhone, parseMoney, todayBR } from './domain';
 export const quoteSchema = z.object({
   id: z.uuid().optional(),
   customer_name: z.string().trim().min(2, 'informe o nome do cliente.').max(100),
@@ -32,6 +32,13 @@ export const resolveSchema = z
 export const followupSchema = z.object({
   id: z.uuid(),
   message: z.string().trim().min(1, 'escreva uma mensagem.').max(2000),
+});
+export const rescheduleSchema = z.object({
+  id: z.uuid(),
+  due_on: z.iso.date().refine(
+    (date) => date >= addDays(todayBR(), 1) && date <= addDays(todayBR(), 365),
+    'escolha uma data entre amanhã e o próximo ano.',
+  ),
 });
 export const companySchema = z.object({
   name: z.string().trim().min(2, 'informe o nome da empresa.').max(100),

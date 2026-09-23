@@ -26,6 +26,13 @@
 
 referências oficiais consultadas: https://nextjs.org/docs/app/getting-started/proxy e https://supabase.com/docs/guides/auth/server-side/creating-a-client.
 
+## 2026-09-23 — mensagens e próximo contato
+
+- mensagens sugeridas capitalizam início de frase e o primeiro nome; preservam a escrita informada do serviço, inclusive siglas. a interface mantém sua linguagem em minúsculas. nenhuma ia ou css intervém na mensagem enviada.
+- a visão geral separa contatos vencidos de próximos contatos, reaproveitando a lista existente. a página do orçamento coloca o whatsapp antes do registro e agrupa contato, ganho, perda e reagendamento. a ação ambígua “marcar como aguardando” saiu da interface; o status aguardando continua definido ao registrar ou reagendar.
+- reagendamento explícito altera apenas a próxima etapa pendente e, quando preciso, posterga as posteriores mantendo a distância mínima da régua d+1/d+3/d+7. o banco confere usuário autenticado, empresa, orçamento aberto e data entre amanhã e 365 dias; chamadas por outro tenant falham. sem nova tabela, serviço externo ou editor de cadência.
+- migration hospedada `20260923010036_reschedule_followup` aplicada ao projeto supabase existente. a função usa o mesmo padrão de acesso restrito das rpcs atuais; advisor acusa aviso deliberado de security definer executável por authenticated. nenhuma chave de administrador foi adicionada.
+
 
 ## 2026-09-22 — provisionamento
 
