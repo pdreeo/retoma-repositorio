@@ -29,13 +29,12 @@ referências oficiais consultadas: https://nextjs.org/docs/app/getting-started/p
 
 ## 2026-09-22 — provisionamento
 
-- preservado o projeto supabase já criado `projeto supabase já provisionado`. aplicado sql existente integralmente. migration local renomeada para a versão atribuída pelo supabase, `20260922085348`, evitando divergência futura de histórico.
+- preservado o projeto supabase já criado do retoma. aplicado sql existente integralmente. migration local renomeada para a versão atribuída pelo supabase, `20260922085348`, evitando divergência futura de histórico.
 - variáveis locais apontam para o projeto real com chave publicável; arquivo `.env.local` ignorado pelo git e pelo pacote de entrega. não há service role.
 - avisos security advisor sobre funções security definer executáveis por authenticated são intencionais no desenho de rpcs estreitas: revogar impediria o produto; security invoker sem políticas de escrita também impediria o fluxo. autorização por vínculo foi testada no banco real, inclusive chamadas com id de outro tenant.
 - não configurar senha, usuários autenticados, redirects ou smtp diretamente em tabelas internas de auth; usar configuração oficial do serviço.
 - instrução da habilidade control-browser exige permissão antes de trocar para os painéis no navegador quando o plugin de um serviço falha. pedir uma única autorização para esse caminho, sem pedir senhas ou tokens no chat.
 - referência do aviso: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
-
 
 ## 2026-09-22 — correções pontuais autorizadas
 
