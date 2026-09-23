@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     template: '%s · retoma',
   },
   description:
-    'saiba quais orçamentos precisam de follow-up hoje e quanto dinheiro você recuperou. feito para estéticas automotivas.',
+    'saiba quais orçamentos precisam de follow-up hoje e quanto dinheiro você recuperou. simples para negócios que vendem serviços.',
   icons: { icon: '/icon.svg' },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
